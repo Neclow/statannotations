@@ -240,10 +240,16 @@ class Annotator:
 
         return self._get_output()
 
-    def apply_and_annotate(self):
-        """Applies a configured statistical test and annotates the plot"""
+    def apply_and_annotate(self, hide_non_signif=False):
+        """Applies a configured statistical test and annotates the plot.
+        * `hide_non_signif`: if True, do not annotate non-significant tests.
+        """
 
         self.apply_test()
+
+        if hide_non_signif:
+            self.annotations = [annot for annot in self.annotations if annot.data.pvalue < self._alpha]
+
         return self.annotate()
 
     def configure(self, **parameters):
