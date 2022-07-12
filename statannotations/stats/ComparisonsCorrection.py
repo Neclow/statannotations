@@ -191,21 +191,25 @@ class ComparisonsCorrection(object):
 
         # See multipletests return values for reject and pvals_corrected
         if self.statsmodels_api:
-            result = result[int(not self.type)]
+            reject, pvals_corrected, _, _ = result
 
         if num_comparisons is not None and num_comparisons > n_vals:
             result = result[:n_vals]
 
-        return result if got_pvalues_in_array else result[0]
+        if got_pvalues_in_array:
+            return reject, pvals_corrected
+        else:
+            return reject[0], pvals_corrected[0]
 
     def _apply_type1_comparisons_correction(self, test_result_list):
         original_pvalues = [result.pvalue for result in test_result_list]
 
-        significant_pvalues = self(original_pvalues)
-        for is_significant, result in zip(significant_pvalues,
-                                          test_result_list):
+        reject, corrected_pvalues = self(original_pvalues)
+
+        for rej, corr_pval, result in zip(reject, corrected_pvalues, test_result_list):
+            result.pvalue = corr_pval
             result.correction_method = self.name
-            result.corrected_significance = is_significant
+            result.corrected_significance = rej
 
     def _apply_type0_comparisons_correction(self, test_result_list):
         for result in test_result_list:
