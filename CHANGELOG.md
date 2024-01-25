@@ -1,4 +1,38 @@
-## v0.4
+## v0.6
+### v0.6.0
+#### Features
+- Add option to skip annotation of non-significant results 
+  (PR [#95](https://github.com/trevismd/statannotations/pull/95) by 
+  [sepro](https://github.com/sepro))
+
+#### Fixes
+- Fix keeping annotation with reduced ylim (
+  PR [#116](https://github.com/trevismd/statannotations/issues/116) by
+  [amkorb](https://github.com/amkorb))
+- Fix pvalue legend (usually for NS range)
+
+#### Additional testing and documentation:
+  - PR [#84](https://github.com/trevismd/statannotations/pull/84) by
+    [JasonMendoza2008 ](https://github.com/JasonMendoza2008)
+  - PR [#86](https://github.com/trevismd/statannotations/pull/86) by 
+    [mbhall88](https://github.com/mbhall88)
+  - PR [#117](https://github.com/trevismd/statannotations/pull/117) by
+    [tathey1](https://github.com/tathey1)
+
+## v0.5.0
+- Add scipy's Brunner-Munzel test
+- Fix applying statannotations for non-string group labels (Issue 
+  [#65](https://github.com/trevismd/statannotations/issues/65))
+- Get Zenodo DOI
+
+### v0.4.5
+- Add MANIFEST.IN (PR [#56](https://github.com/trevismd/statannotations/pull/56)
+  by [Matt Chan](https://github.com/thewchan))
+- Limit supported Seaborn version to v.0.11.x
+- Fix adding annotations with hue if data is passed as arrays 
+  (PR [#64](https://github.com/trevismd/statannotations/pull/64) by 
+  [getzze](https://github.com/getzze))
+
 ### v0.4.4
 - The label for Kruskal-Wallis test explicitly states that it is run pairwise 
   (PR [#40](https://github.com/trevismd/statannotations/pull/40) by

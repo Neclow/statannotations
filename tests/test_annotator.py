@@ -30,8 +30,8 @@ class TestAnnotator(unittest.TestCase):
              8: {'x': "b", 'y': 18, 'color': 'red'}
              }).T
 
-        self.pairs_for_df = [(("a", "blue"), ("b", "blue")),
-                             (("a", "blue"), ("a", "red"))]
+        self.pairs = [(("a", "blue"), ("b", "blue")),
+                      (("a", "blue"), ("a", "red"))]
         self.df.y = self.df.y.astype(float)
         self.params_df = {
             "data": self.df,
@@ -41,13 +41,59 @@ class TestAnnotator(unittest.TestCase):
             "order": ["a", "b"],
             "hue_order": ['red', 'blue']}
 
+        self.df_x_float = pd.DataFrame(
+            data={
+                "x_axis": [1.01, 1.02, 1.03, 1.01, 1.02, 1.03, 1.01, 1.02,
+                           1.03, 1.01, 1.02, 1.03, 1.01, 1.02, 1.03, 1.01,
+                           1.02, 1.03, 1.01, 1.02, 1.03, 1.01, 1.02, 1.03],
+                "y_axis": [16.99, 10.34, 21.01, 23.68, 24.59, 25.29, 8.77,
+                           26.88, 15.04, 14.78, 10.27, 35.26, 15.42, 18.43,
+                           14.83, 21.58, 10.33, 16.29, 16.97, 20.65, 17.92,
+                           20.29, 15.77, 39.42],
+                "hue": ["hue_2", "hue_2", "hue_1", "hue_1", "hue_2", "hue_2",
+                        "hue_2", "hue_1", "hue_2", "hue_1", "hue_1", "hue_2",
+                        "hue_1", "hue_1", "hue_0", "hue_0", "hue_2", "hue_1",
+                        "hue_0", "hue_0", "hue_2", "hue_0", "hue_2", "hue_1"]
+            }
+        )
+        self.params_float = {
+            "data": self.df_x_float,
+            "x": "x_axis",
+            "y": "y_axis",
+            "hue": "hue",
+            "hue_order": ["hue_0", "hue_1", "hue_2"],
+            "order": [1.01, 1.02, 1.03]
+        }
+        self.ax_float = sns.boxplot(**self.params_float)
+
+        self.params_arrays = {
+            "data": None,
+            "x": self.df['x'],
+            "y": self.df['y'],
+            "hue": self.df['color'],
+            "order": ["a", "b"],
+            "hue_order": ['red', 'blue']}
+
     def test_init_simple(self):
         self.annot = Annotator(self.ax, [(0, 1)], data=self.data)
 
+    def test_init_float(self):
+        self.annot_float = Annotator(
+            self.ax_float,
+            pairs=[
+                ((1.01, "hue_0"), (1.01, "hue_1")),
+                ((1.02, "hue_0"), (1.02, "hue_1"))
+            ],
+            **self.params_float
+        )
+
     def test_init_df(self):
         self.ax = sns.boxplot(**self.params_df)
-        self.annot = Annotator(self.ax, pairs=self.pairs_for_df,
-                               **self.params_df)
+        self.annot = Annotator(self.ax, pairs=self.pairs, **self.params_df)
+
+    def test_init_arrays(self):
+        self.ax = sns.boxplot(**self.params_arrays)
+        self.annot = Annotator(self.ax, pairs=self.pairs, **self.params_arrays)
 
     def test_init_barplot(self):
         ax = sns.barplot(data=self.data)
@@ -84,6 +130,13 @@ class TestAnnotator(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "(specified in `pairs`)"):
             self.annot = Annotator(self.ax, [(("a", "yellow"), ("b", "blue"))],
                                    data=self.df, x="x", y="y",
+                                   order=["a", "b"], hue='color',
+                                   hue_order=['red', 'blue'])
+
+    def test_unmatched_hue_in_box_pairs_arrays(self):
+        with self.assertRaisesRegex(ValueError, "(specified in `pairs`)"):
+            self.annot = Annotator(self.ax, [(("a", "yellow"), ("b", "blue"))],
+                                   data=None, x=self.df['x'], y=self.df['y'],
                                    order=["a", "b"], hue='color',
                                    hue_order=['red', 'blue'])
 
@@ -148,6 +201,21 @@ class TestAnnotator(unittest.TestCase):
         self.annot.apply_test()
         self.assertEqual(["ns"], self.annot.get_annotations_text())
 
+    def test_support_int_labels(self):
+        self.test_init_simple()
+        self.annot.configure(test="Mann-Whitney")
+        self.annot.apply_and_annotate()
+
+    def test_support_float_labels(self):
+        self.test_init_float()
+        self.annot_float.configure(test='Mann-Whitney')
+        self.annot_float.apply_and_annotate()
+
+    def test_configure_hide_non_significant(self):
+        self.test_init_simple()
+        self.annot.configure(test='Mann-Whitney', hide_non_significant=True)
+        self.annot.apply_and_annotate()
+
     def test_get_annotation_text_in_input_order(self):
         self.test_init_df()
         self.annot.configure(test="Mann-Whitney", text_format="simple")
@@ -159,7 +227,7 @@ class TestAnnotator(unittest.TestCase):
         self.assertEqual(expected, self.annot.get_annotations_text())
 
     def test_init_df_inverted(self):
-        box_pairs = self.pairs_for_df[::-1]
+        box_pairs = self.pairs[::-1]
         self.ax = sns.boxplot(**self.params_df)
         self.annot = Annotator(self.ax, pairs=box_pairs, **self.params_df)
 
@@ -179,7 +247,7 @@ class TestAnnotator(unittest.TestCase):
         self.annot.apply_and_annotate()
 
         self.ax = sns.boxplot(**self.params_df)
-        self.annot.new_plot(self.ax, self.pairs_for_df, **self.params_df)
+        self.annot.new_plot(self.ax, self.pairs, **self.params_df)
         self.annot.configure(test="Levene", text_format="simple")
         with self.assertWarns(UserWarning):
             self.annot.annotate()
@@ -190,7 +258,7 @@ class TestAnnotator(unittest.TestCase):
         self.annot.apply_and_annotate()
 
         self.ax = sns.boxplot(**self.params_df)
-        self.annot.new_plot(self.ax, self.pairs_for_df, **self.params_df)
+        self.annot.new_plot(self.ax, self.pairs, **self.params_df)
         self.annot.configure(test="Mann-Whitney-gt", text_format="simple")
         self.annot.apply_and_annotate()
 

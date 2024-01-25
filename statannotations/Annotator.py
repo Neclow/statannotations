@@ -38,6 +38,7 @@ CONFIGURABLE_PARAMETERS = [
     'text_offset',
     'use_fixed_offset',
     'verbose',
+    'hide_non_significant',
 ]
 
 
@@ -56,7 +57,8 @@ _DEFAULT_VALUES = {
     "text_offset": 1,
     "color": '0.2',
     "line_width": 1.5,
-    "custom_annotations": None
+    "custom_annotations": None,
+    "hide_non_significant": False,
 }
 
 ENGINE_PLOTTERS = {"seaborn": _SeabornPlotter}
@@ -130,6 +132,7 @@ class Annotator:
         self.line_width = 1.5
         self.value_offset = None
         self.custom_annotations = None
+        self.hide_non_significant = False
 
     @staticmethod
     def get_empty_annotator():
@@ -216,6 +219,9 @@ class Annotator:
         self.validate_test_short_name()
 
         for annotation in self.annotations:
+            if self.hide_non_significant and isinstance(annotation.data, StatResult) \
+                    and not annotation.data.is_significant:
+                continue
             self._annotate_pair(annotation,
                                 ax_to_data=ax_to_data,
                                 ann_list=ann_list,
@@ -262,23 +268,23 @@ class Annotator:
         * `correction_format`: How to format the star notation on the plot when
             the multiple comparisons correction method removes the significance
             * `default`: a ' (ns)' suffix is added, such as in printed output,
-                corresponds to "{star} ({suffix})"
+            corresponds to "{star} ({suffix})"
             * `replace`: the original star value is replaced with 'ns'
-                corresponds to "{suffix}"
+            corresponds to "{suffix}"
             * a custom formatting string using "{star}" for the original
-                pvalue and '{suffix}' for 'ns'
+            pvalue and '{suffix}' for 'ns'
+        * `hide_non_significant`: hide annotations for non-significant pair
+            comparisons
         * `line_height`: in axes fraction coordinates
         * `line_offset`
         * `line_offset_to_group`
         * `line_width`
         * `loc`
         * `pvalue_format`: list of lists, or tuples. Default values are:
-            * For "star" text_format: `[[1e-4, "****"], [1e-3, "***"],
-                                        [1e-2, "**"], [0.05, "*"],
-                                        [1, "ns"]]`.
-            * For "simple" text_format : `[[1e-5, "1e-5"], [1e-4, "1e-4"],
-                                           [1e-3, "0.001"], [1e-2, "0.01"],
-                                           [5e-2, "0.05"]]`
+            * For "star" text_format:
+              `[[1e-4, "****"], [1e-3, "***"], [1e-2, "**"], [0.05, "*"], [1, "ns"]]`.
+            * For "simple" text_format:
+              `[[1e-5, "1e-5"], [1e-4, "1e-4"], [1e-3, "0.001"], [1e-2, "0.01"], [5e-2, "0.05"]]`.
         * `show_test_name`: Set to False to not show the (short) name of
             test
         * `test`
@@ -695,7 +701,7 @@ class Annotator:
 
     def _plot_line(self, line_x, line_y):
         if self.loc == 'inside':
-            self.ax.plot(line_x, line_y, lw=self.line_width, c=self.color)
+            self.ax.plot(line_x, line_y, lw=self.line_width, c=self.color, clip_on=False)
         else:
             line = lines.Line2D(line_x, line_y, lw=self.line_width,
                                 c=self.color, transform=self.ax.transData)
