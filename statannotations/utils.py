@@ -67,7 +67,7 @@ def check_order_in_data(data, x, order) -> None:
 
 def _check_pairs_in_data_no_hue(pairs: Union[list, tuple],
                                 data: Union[List[list],
-                                            pd.DataFrame] = None,
+                                            pd.DataFrame],
                                 x: Union[str, list] = None) -> None:
 
     x_values = get_x_values(data, x)
@@ -81,7 +81,7 @@ def _check_pairs_in_data_no_hue(pairs: Union[list, tuple],
 
 def _check_pairs_in_data_with_hue(
         pairs: Union[list, tuple],
-        data: Union[None, List[list], pd.DataFrame] = None,
+        data: Union[List[list], pd.DataFrame],
         group_coord: Union[None, str, list] = None,
         hue: Union[None, str, list] = None) -> set:
 
@@ -118,7 +118,7 @@ def _check_hue_order_in_data(hue, hue_values: set,
 
 
 def check_pairs_in_data(pairs: Union[list, tuple],
-                        data: Union[List[list], pd.DataFrame] = None,
+                        data: Union[List[list], pd.DataFrame],
                         coord: Union[str, list] = None,
                         hue: str = None,
                         hue_order: List[str] = None):
